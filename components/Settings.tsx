@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { AppData } from '../types';
 
@@ -9,6 +8,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ data, updateData }) => {
   const [status, setStatus] = useState('');
+  const [newPasscode, setNewPasscode] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExportData = () => {
@@ -23,6 +23,17 @@ const Settings: React.FC<SettingsProps> = ({ data, updateData }) => {
     linkElement.click();
     
     setStatus('✅ Backup downloaded! Send this file to your phone/iPad.');
+    setTimeout(() => setStatus(''), 5000);
+  };
+
+  const handleChangePasscode = () => {
+    if (newPasscode.length < 4) {
+      setStatus('❌ Passcode must be at least 4 digits');
+      return;
+    }
+    localStorage.setItem('cloudstock_passcode', newPasscode);
+    setNewPasscode('');
+    setStatus('✅ Passcode updated successfully!');
     setTimeout(() => setStatus(''), 5000);
   };
 
@@ -98,41 +109,64 @@ const Settings: React.FC<SettingsProps> = ({ data, updateData }) => {
           </div>
         </div>
 
-        {/* Privacy Card */}
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+        {/* Security Card */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col">
           <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.744c0 5.621 3.474 10.331 8.388 12.23a11.956 11.956 0 008.388-12.23c0-1.311-.209-2.571-.598-3.751A11.956 11.956 0 0112 2.714z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-slate-800">100% Data Privacy</h3>
+            <h3 className="text-xl font-bold text-slate-800">System Lock</h3>
           </div>
+          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+            Change your access passcode. This code is required every time the app is launched.
+          </p>
           <div className="space-y-4">
-            <div className="p-4 bg-slate-50 rounded-2xl">
-              <h4 className="text-sm font-bold text-slate-700 mb-1">Local Hosting</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">No data is sent to a central server. Your inventory, costs, and profits are stored encrypted in your browser's LocalStorage.</p>
+             <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">New Passcode</label>
+              <input 
+                type="password" 
+                inputMode="numeric"
+                placeholder="4-6 digits"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                value={newPasscode}
+                onChange={(e) => setNewPasscode(e.target.value.replace(/[^0-9]/g, ''))}
+              />
             </div>
-            <div className="p-4 bg-slate-50 rounded-2xl">
-              <h4 className="text-sm font-bold text-slate-700 mb-1">Public Web, Private Data</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Even if the app is hosted on GitHub or Vercel, the hosting provider only sees the code, never your records.</p>
-            </div>
-            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-              <h4 className="text-sm font-bold text-amber-800 mb-1">Browser Cache Warning</h4>
-              <p className="text-xs text-amber-700 leading-relaxed">Clearing your browser's "Site Data" or "History" might delete your data. **Always keep a backup file.**</p>
-            </div>
+            <button 
+              onClick={handleChangePasscode}
+              className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all"
+            >
+              Update Passcode
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 p-8 rounded-3xl text-white">
-        <h3 className="text-xl font-bold mb-4">Host it yourself for Free</h3>
-        <p className="text-slate-400 text-sm mb-6 max-w-2xl leading-relaxed">
-          To access this on iPad and Android for $0, upload these files to **GitHub Pages**. It provides a private URL that you can open on any device. 
-        </p>
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-          <a href="https://pages.github.com/" target="_blank" className="px-6 py-2 bg-white text-slate-900 rounded-xl font-bold text-sm text-center">Setup GitHub Pages</a>
-          <a href="https://vercel.com/" target="_blank" className="px-6 py-2 bg-slate-700 text-white rounded-xl font-bold text-sm text-center">Try Vercel (Free Tier)</a>
+      {/* Privacy Card */}
+      <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.744c0 5.621 3.474 10.331 8.388 12.23a11.956 11.956 0 008.388-12.23c0-1.311-.209-2.571-.598-3.751A11.956 11.956 0 0112 2.714z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-slate-800">100% Data Privacy</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-slate-50 rounded-2xl">
+            <h4 className="text-sm font-bold text-slate-700 mb-1">Local Hosting</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">No data is sent to a central server. Your inventory is stored encrypted in your browser.</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-2xl">
+            <h4 className="text-sm font-bold text-slate-700 mb-1">Passcode Gate</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">Even with your secret URL, no one can see your data without the system passcode.</p>
+          </div>
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <h4 className="text-sm font-bold text-amber-800 mb-1">Browser Cache</h4>
+            <p className="text-xs text-amber-700 leading-relaxed">Clearing browser history deletes your data. **Keep frequent backup files.**</p>
+          </div>
         </div>
       </div>
     </div>
