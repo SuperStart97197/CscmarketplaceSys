@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Page, AppData } from './types';
 import { Icons } from './constants';
@@ -12,6 +11,11 @@ import Settings from './components/Settings';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('Dashboard');
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [storedPasscode, setStoredPasscode] = useState<string | null>(localStorage.getItem('cloudstock_passcode'));
+  const [passcodeInput, setPasscodeInput] = useState('');
+  const [passcodeError, setPasscodeError] = useState(false);
+  
   const [data, setData] = useState<AppData>({
     inventory: [],
     sales: [],
@@ -29,6 +33,11 @@ const App: React.FC = () => {
         console.error("Failed to parse local data", e);
       }
     }
+    
+    // If no passcode is set, we consider the user authorized to set one
+    if (!localStorage.getItem('cloudstock_passcode')) {
+      setIsAuthorized(false);
+    }
   }, []);
 
   // Save data to LocalStorage on change
@@ -36,9 +45,87 @@ const App: React.FC = () => {
     localStorage.setItem('cloudstock_data', JSON.stringify(data));
   }, [data]);
 
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!storedPasscode) {
+      // Setup phase
+      if (passcodeInput.length >= 4) {
+        localStorage.setItem('cloudstock_passcode', passcodeInput);
+        setStoredPasscode(passcodeInput);
+        setIsAuthorized(true);
+      }
+    } else {
+      // Login phase
+      if (passcodeInput === storedPasscode) {
+        setIsAuthorized(true);
+        setPasscodeError(false);
+      } else {
+        setPasscodeError(true);
+        setPasscodeInput('');
+      }
+    }
+  };
+
   const updateData = (updater: (prev: AppData) => AppData) => {
     setData(prev => updater(prev));
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden p-8 space-y-8 animate-in fade-in zoom-in duration-300">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {storedPasscode ? 'Restricted Access' : 'Create Your Passcode'}
+            </h1>
+            <p className="text-slate-500 text-sm">
+              {storedPasscode 
+                ? 'Enter your private code to view records' 
+                : 'Set a 4-6 digit code to secure your data'}
+            </p>
+          </div>
+
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div className="space-y-2">
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoFocus
+                className={`w-full text-center text-3xl tracking-[1em] font-bold py-4 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${
+                  passcodeError ? 'border-red-500 shake' : 'border-slate-200 focus:border-blue-500'
+                }`}
+                placeholder="••••"
+                value={passcodeInput}
+                onChange={(e) => setPasscodeInput(e.target.value)}
+              />
+              {passcodeError && (
+                <p className="text-center text-xs font-bold text-red-500">Incorrect Passcode</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-xl shadow-blue-100"
+            >
+              {storedPasscode ? 'Unlock System' : 'Set Passcode'}
+            </button>
+          </form>
+
+          <div className="pt-4 text-center">
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+              Data encrypted locally on this device
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const navItems = [
     { id: 'Dashboard', icon: Icons.Dashboard, label: 'Dashboard' },
@@ -89,7 +176,16 @@ const App: React.FC = () => {
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 space-y-2">
+          <button 
+            onClick={() => setIsAuthorized(false)}
+            className="w-full flex items-center text-xs font-bold text-slate-400 hover:text-red-500 p-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+            LOCK SYSTEM
+          </button>
           <div className="bg-slate-50 p-3 rounded-lg flex items-center">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-3"></div>
             <div>
@@ -105,10 +201,14 @@ const App: React.FC = () => {
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           CloudStock
         </h1>
-        <div className="flex items-center space-x-2">
-           <div className="w-2 h-2 rounded-full bg-green-500"></div>
-           <span className="text-[10px] font-bold text-slate-400 uppercase">Local</span>
-        </div>
+        <button 
+          onClick={() => setIsAuthorized(false)}
+          className="text-slate-400 p-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </button>
       </header>
 
       {/* Main Content Area */}
