@@ -1,0 +1,8 @@
+
+{
+  "name": "CloudStock Pro",
+  "description": "A cross-platform local-first inventory system. $0 cost hosting, 100% data privacy via localStorage.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
